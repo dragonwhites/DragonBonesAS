@@ -1,19 +1,19 @@
 ﻿package dragonBones
 {
-	import flash.errors.IllegalOperationError;
-	import flash.geom.ColorTransform;
-	import flash.geom.Matrix;
-	
 	import dragonBones.animation.AnimationState;
 	import dragonBones.animation.SlotTimelineState;
 	import dragonBones.core.DBObject;
 	import dragonBones.core.dragonBones_internal;
-	import dragonBones.objects.DBTransform;
 	import dragonBones.objects.DisplayData;
 	import dragonBones.objects.Frame;
+	import dragonBones.objects.MeshData;
 	import dragonBones.objects.SlotData;
 	import dragonBones.objects.SlotFrame;
 	import dragonBones.utils.TransformUtil;
+	import flash.errors.IllegalOperationError;
+	import flash.geom.ColorTransform;
+	import flash.geom.Matrix;
+	
 
 	//import dragonBones.objects.FrameCached;
 	//import dragonBones.objects.TimelineCached;
@@ -586,6 +586,18 @@
 		{
 			changeDisplay(_originDisplayIndex);
 			updateDisplayColor(0, 0, 0, 0, 1, 1, 1, 1, true);
+		}
+		
+		public function getMeshData(meshName:String):MeshData
+		{
+			for (var i:int = 0, len:int = _displayDataList.length; i < len; i++)
+			{
+				if (_displayDataList[i].name == meshName && _displayDataList[i] is MeshData)
+				{
+					return _displayDataList[i] as MeshData;
+				}
+			}
+			return null;
 		}
 	}
 }

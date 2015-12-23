@@ -21,6 +21,8 @@
 		public static const COLOR:String = "color";
 		public static const RECTANGLE:String = "rectangle";
 		public static const ELLIPSE:String = "ellipse";
+		public static const MESH:String = "mesh";
+		public static const FFD:String = "ffd";
 		
 		public static const TEXTURE_ATLAS:String = "TextureAtlas";
 		public static const SUB_TEXTURE:String = "SubTexture";
@@ -78,6 +80,7 @@
 		public static const A_GREEN_MULTIPLIER:String = "gM";
 		public static const A_BLUE_MULTIPLIER:String = "bM";
 		public static const A_CURVE:String = "curve";
+		public static const A_VERTICES:String = "vertices";
 		
 		public static const A_SCALE_X_OFFSET:String = "scXOffset";
 		public static const A_SCALE_Y_OFFSET:String = "scYOffset";

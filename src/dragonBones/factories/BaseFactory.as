@@ -1,16 +1,7 @@
 package dragonBones.factories
 {
-	import flash.errors.IllegalOperationError;
-	import flash.events.Event;
-	import flash.events.EventDispatcher;
-	import flash.geom.Matrix;
-	import flash.utils.ByteArray;
-	import flash.utils.Dictionary;
-	
 	import dragonBones.Armature;
 	import dragonBones.Bone;
-	import dragonBones.Slot;
-	import dragonBones.core.dragonBones_internal;
 	import dragonBones.fast.FastArmature;
 	import dragonBones.fast.FastBone;
 	import dragonBones.fast.FastSlot;
@@ -21,9 +12,18 @@ package dragonBones.factories
 	import dragonBones.objects.DecompressedData;
 	import dragonBones.objects.DisplayData;
 	import dragonBones.objects.DragonBonesData;
+	import dragonBones.objects.MeshData;
 	import dragonBones.objects.SkinData;
 	import dragonBones.objects.SlotData;
+	import dragonBones.Slot;
 	import dragonBones.textures.ITextureAtlas;
+	import flash.errors.IllegalOperationError;
+	import flash.events.Event;
+	import flash.events.EventDispatcher;
+	import flash.geom.Matrix;
+	import flash.utils.ByteArray;
+	import flash.utils.Dictionary;
+	
 
 	use namespace dragonBones_internal;
 	
@@ -250,6 +250,69 @@ package dragonBones.factories
 			}
 			
 			return generateDisplay(targetTextureAtlas, textureName, pivotX, pivotY);
+		}
+		
+		/**
+		 * Return the MeshDisplay.
+		 * @param The name of this Texture.
+		 * @param The name of the TextureAtlas.
+		 * @param The registration pivotX position.
+		 * @param The registration pivotY position.
+		 * @return An Object.
+		 */
+		public function getMeshDisplay(meshData:MeshData, textureAtlasName:String = null):Object
+		{
+			var targetTextureAtlas:Object;
+			var textureAtlasArr:Array;
+			var i:int;
+			var len:int;
+			var textureName:String = meshData.name;
+			if(textureAtlasName)
+			{
+				textureAtlasArr = textureAtlasDic[textureAtlasName] as Array;
+				if (textureAtlasArr)
+				{
+					for (i = 0, len = textureAtlasArr.length; i < len; i++)
+					{
+						targetTextureAtlas = textureAtlasArr[i];
+						if (targetTextureAtlas.getRegion(textureName))
+						{
+							break;
+						}
+						targetTextureAtlas = null;
+					}
+				}
+			}
+			else
+			{
+				for (textureAtlasName in textureAtlasDic)
+				{
+					textureAtlasArr = textureAtlasDic[textureAtlasName] as Array;
+					if (textureAtlasArr)
+					{
+						for (i = 0, len = textureAtlasArr.length; i < len; i++)
+						{
+							targetTextureAtlas = textureAtlasArr[i];
+							if (targetTextureAtlas.getRegion(textureName))
+							{
+								break;
+							}
+							targetTextureAtlas = null;
+						}
+						if (targetTextureAtlas != null)
+						{
+							break;
+						}
+					}
+				}
+			}
+			
+			if(!targetTextureAtlas)
+			{
+				return null;
+			}
+			
+			return generateMesh(targetTextureAtlas, textureName, meshData);
 		}
 		
 		//一般情况下dragonBonesData和textureAtlas是一对一的，通过相同的key对应。
@@ -497,7 +560,9 @@ package dragonBones.factories
 							displayList[l] = childArmature;
 							slot.hasChildArmature = true;
 							break;
-						
+						case DisplayData.MESH:
+							displayList[l] = getMeshDisplay(displayData as MeshData, textureAtlasName);
+							break;
 						case DisplayData.IMAGE:
 						default:
 							displayList[l] = getTextureDisplay(displayData.name, textureAtlasName, displayData.pivot.x, displayData.pivot.y);
@@ -575,7 +640,9 @@ package dragonBones.factories
 							var childArmature:Armature = buildArmatureUsingArmatureDataFromTextureAtlas(armature.__dragonBonesData, armature.__dragonBonesData.getArmatureDataByName(displayData.name), textureAtlasName, skinName);
 							displayList[l] = childArmature;
 							break;
-						
+						case DisplayData.MESH:
+							displayList[l] = getMeshDisplay(displayData as MeshData, textureAtlasName);
+							break;
 						case DisplayData.IMAGE:
 						default:
 							displayList[l] = getTextureDisplay(displayData.name, textureAtlasName, displayData.pivot.x, displayData.pivot.y);
@@ -801,6 +868,11 @@ package dragonBones.factories
 		 * @return
 		 */
 		protected function generateDisplay(textureAtlas:Object, fullName:String, pivotX:Number, pivotY:Number):Object
+		{
+			return null;
+		}
+		
+		protected function generateMesh(textureAtlas:Object, fullName:String, meshData:MeshData):Object
 		{
 			return null;
 		}

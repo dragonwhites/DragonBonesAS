@@ -204,20 +204,72 @@
 		
 		private static function parseDisplayData(displayObject:Object):DisplayData
 		{
-			var displayData:DisplayData = new DisplayData();
-			displayData.name = displayObject[ConstValues.A_NAME];
-			displayData.type = displayObject[ConstValues.A_TYPE];
-			parseTransform(displayObject[ConstValues.TRANSFORM], displayData.transform, displayData.pivot);
-			displayData.pivot.x = NaN;
-			displayData.pivot.y = NaN;
-			if(tempDragonBonesData!=null)
-			{
-				tempDragonBonesData.addDisplayData(displayData);
-			}
+			var displayData:DisplayData;
 			
+			if (displayObject[ConstValues.A_TYPE] == ConstValues.MESH)
+			{
+				displayData = parseMeshData(displayObject);
+			}
+			else
+			{
+				displayData = new DisplayData();
+				displayData.name = displayObject[ConstValues.A_NAME];
+				displayData.type = displayObject[ConstValues.A_TYPE];
+				parseTransform(displayObject[ConstValues.TRANSFORM], displayData.transform, displayData.pivot);
+				displayData.pivot.x = NaN;
+				displayData.pivot.y = NaN;
+				if(tempDragonBonesData!=null)
+				{
+					tempDragonBonesData.addDisplayData(displayData);
+				}
+			}
 			return displayData;
 		}
 		
+		private static function parseMeshData(meshObject:Object):MeshData
+		{
+			var meshData:MeshData = new MeshData();
+			meshData.name = meshObject[ConstValues.A_NAME];
+			meshData.type = meshObject[ConstValues.A_TYPE];
+			parseTransform(meshObject[ConstValues.TRANSFORM], meshData.transform, meshData.pivot);
+			meshData.pivot.x = NaN;
+			meshData.pivot.y = NaN;
+			
+			var vertices:Vector.<Number> = new Vector.<Number>();
+			var rawVertices:Vector.<Number> = new Vector.<Number>();
+			var triangles:Vector.<int> = new Vector.<int>();
+			var uvs:Vector.<Number> = new Vector.<Number>();
+			var edges:Vector.<int> = new Vector.<int>();
+			var i:int;
+			var len:int; 
+			for ( i = 0, len = meshObject.vertices.length; i < len; i += 2)
+			{
+				rawVertices.push(meshObject.vertices[i], meshObject.vertices[i + 1]);
+				vertices.push(meshObject.vertices[i], meshObject.vertices[i + 1], meshObject.uvs[i], meshObject.uvs[i + 1]);
+				uvs.push(meshObject.uvs[i], meshObject.uvs[i + 1]);
+			}
+			for (i = 0, len = meshObject.triangles.length; i < len; i++)
+			{
+				triangles.push(meshObject.triangles[i]);
+			}
+			for (i = 0, len = meshObject.edges.length; i < len; i++)
+			{
+				edges.push(meshObject.edges[i]);
+			}
+			meshData.vertices = vertices;
+			meshData.rawVertices = rawVertices;
+			meshData.triangles = triangles;
+			meshData.uvs = uvs;
+			meshData.edges = edges;
+			
+			if(tempDragonBonesData!=null)
+			{
+				tempDragonBonesData.addDisplayData(meshData);
+			}
+			
+			return meshData;
+			
+		}
 		/** @private */
 		dragonBones_internal static function parseAnimationData(animationObject:Object, frameRate:uint):AnimationData
 		{
@@ -261,7 +313,12 @@
 					lastFrameDuration = Math.min(lastFrameDuration, slotTimeline.frameList[slotTimeline.frameList.length - 1].duration);
 					animationData.addSlotTimeline(slotTimeline);
 				}
-				
+			}
+			
+			for each( var ffdTimelineObject:Object in animationObject[ConstValues.FFD])
+			{
+				var ffdTimeline:FFDTimeline = parseFFDTimeline(ffdTimelineObject, animationData.duration, frameRate);
+				animationData.addFFDTimeline(ffdTimeline);
 			}
 			
 			if(animationData.frameList.length > 0)
@@ -308,6 +365,27 @@
 			for each(var frameObject:Object in timelineObject[ConstValues.FRAME])
 			{
 				var frame:SlotFrame = parseSlotFrame(frameObject, frameRate);
+				timeline.addFrame(frame);
+			}
+			
+			parseTimeline(timelineObject, timeline);
+			
+			return timeline;
+		}
+		
+		private static function parseFFDTimeline(timelineObject:Object, duration:int, frameRate:uint):FFDTimeline
+		{
+			var timeline:FFDTimeline = new FFDTimeline();
+			timeline.name = timelineObject[ConstValues.A_NAME];
+			timeline.skinName = timelineObject[ConstValues.SKIN];
+			timeline.slotName = timelineObject[ConstValues.SLOT];
+			timeline.scale = getNumber(timelineObject, ConstValues.A_SCALE, 1) || 0;
+			timeline.offset = getNumber(timelineObject, ConstValues.A_OFFSET, 0) || 0;
+			timeline.duration = duration;
+			
+			for each(var frameObject:Object in timelineObject[ConstValues.FRAME])
+			{
+				var frame:FFDFrame = parseFFDFrame(frameObject, frameRate);
 				timeline.addFrame(frame);
 			}
 			
@@ -367,6 +445,27 @@
 				frame.color = new ColorTransform();
 				parseColorTransform(colorTransformObject, frame.color);
 			}
+			
+			return frame;
+		}
+		
+		private static function parseFFDFrame(frameObject:Object, frameRate:uint):FFDFrame
+		{
+			var frame:FFDFrame = new FFDFrame();
+			parseFrame(frameObject, frame, frameRate);
+			
+			//如果为NaN，则说明没有改变过zOrder
+			frame.offset = frameObject[ConstValues.A_OFFSET] || 0;
+			var arr:Array = frameObject[ConstValues.A_VERTICES];
+			var vertices:Vector.<Number> = new Vector.<Number>();
+			if (arr)
+			{
+				for (var i:int = 0, len:int = arr.length; i < len; i++)
+				{
+					vertices.push(arr[i]);
+				}
+			}
+			frame.vertices = vertices;
 			
 			return frame;
 		}

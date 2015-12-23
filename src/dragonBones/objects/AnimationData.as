@@ -27,6 +27,12 @@ package dragonBones.objects
 			return _slotTimelineList;
 		}
 		
+		private var _ffdTimelineList:Vector.<FFDTimeline>;
+		public function get ffdTimelineList():Vector.<FFDTimeline>
+		{
+			return _ffdTimelineList;
+		}
+		
 		public function AnimationData()
 		{
 			super();
@@ -43,6 +49,8 @@ package dragonBones.objects
 			_timelineList.fixed = true;
 			_slotTimelineList = new Vector.<SlotTimeline>;
 			_slotTimelineList.fixed = true;
+			_ffdTimelineList = new Vector.<FFDTimeline>();
+			_ffdTimelineList.fixed = true;
 		}
 		
 		override public function dispose():void
@@ -125,6 +133,34 @@ package dragonBones.objects
 				_slotTimelineList.fixed = false;
 				_slotTimelineList[_slotTimelineList.length] = timeline;
 				_slotTimelineList.fixed = true;
+			}
+		}
+		
+		public function getFFDTimeline(timelineName:String):FFDTimeline
+		{
+			var i:int = _ffdTimelineList.length;
+			while(i --)
+			{
+				if(_ffdTimelineList[i].name == timelineName)
+				{
+					return _ffdTimelineList[i];
+				}
+			}
+			return null;
+		}
+		
+		public function addFFDTimeline(timeline:FFDTimeline):void
+		{
+			if(!timeline)
+			{
+				throw new ArgumentError();
+			}
+			
+			if(_ffdTimelineList.indexOf(timeline) < 0)
+			{
+				_ffdTimelineList.fixed = false;
+				_ffdTimelineList[_ffdTimelineList.length] = timeline;
+				_ffdTimelineList.fixed = true;
 			}
 		}
 	}

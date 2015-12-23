@@ -3,10 +3,11 @@
 	import flash.geom.Point;
 	
 	/** @private */
-	final public class DisplayData
+	public class DisplayData
 	{
 		public static const ARMATURE:String = "armature";
 		public static const IMAGE:String = "image";
+		public static const MESH:String = "mesh";
 		
 		public var name:String;
 		public var slotName:String;

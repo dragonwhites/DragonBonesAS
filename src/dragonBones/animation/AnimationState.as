@@ -2,13 +2,15 @@
 {
 	import dragonBones.Armature;
 	import dragonBones.Bone;
-	import dragonBones.Slot;
 	import dragonBones.core.dragonBones_internal;
 	import dragonBones.events.AnimationEvent;
 	import dragonBones.objects.AnimationData;
+	import dragonBones.objects.FFDTimeline;
 	import dragonBones.objects.Frame;
+	import dragonBones.objects.MeshData;
 	import dragonBones.objects.SlotTimeline;
 	import dragonBones.objects.TransformTimeline;
+	import dragonBones.Slot;
 	
 	use namespace dragonBones_internal;
 	/**
@@ -95,6 +97,7 @@
 		private var _armature:Armature;
 		private var _timelineStateList:Vector.<TimelineState>;
 		private var _slotTimelineStateList:Vector.<SlotTimelineState>;
+		private var _ffdTimelineStateList:Vector.<FFDTimelineState>;
 		private var _boneMasks:Vector.<String>;
 		
 		private var _isPlaying:Boolean;
@@ -130,8 +133,9 @@
 		
 		public function AnimationState()
 		{ 
-			_timelineStateList = new Vector.<TimelineState>;
-			_slotTimelineStateList = new Vector.<SlotTimelineState>;
+			_timelineStateList = new Vector.<TimelineState>();
+			_slotTimelineStateList = new Vector.<SlotTimelineState>();
+			_ffdTimelineStateList = new Vector.<FFDTimelineState>();
 			_boneMasks = new Vector.<String>;
 		}
 		
@@ -160,6 +164,13 @@
 				SlotTimelineState.returnObject(_slotTimelineStateList[i]);
 			}
 			_slotTimelineStateList.length = 0;
+			
+			i = _ffdTimelineStateList.length;
+			while(i --)
+			{
+				FFDTimelineState.returnObject(_ffdTimelineStateList[i]);
+			}
+			_ffdTimelineStateList.length = 0;
 		}
 		
 //骨架装配
@@ -262,6 +273,7 @@
 		{
 			var timelineState:TimelineState;
 			var slotTimelineState:SlotTimelineState;
+			var ffdTimelineState:FFDTimelineState;
 			var i:int = _timelineStateList.length;
 			while(i --)
 			{
@@ -279,6 +291,23 @@
 				if (!_armature.getSlot(slotTimelineState.name))
 				{
 					removeSlotTimelineState(slotTimelineState);
+				}
+			}
+			
+			i = _ffdTimelineStateList.length;
+			
+			var slot:Slot;
+			while (i --)
+			{
+				ffdTimelineState = _ffdTimelineStateList[i];
+				slot = _armature.getSlot(ffdTimelineState.slotName);
+				if (!slot)
+				{
+					removeFFDTimelineState(ffdTimelineState);
+				}
+				else if (!slot.getMeshData(ffdTimelineState.name))
+				{
+					removeFFDTimelineState(ffdTimelineState);
 				}
 			}
 			
@@ -310,6 +339,11 @@
 			for each(var slotTimeline:SlotTimeline in _clip.slotTimelineList)
 			{
 				addSlotTimelineState(slotTimeline.name);
+			}
+			
+			for each(var ffdTimeline:FFDTimeline in _clip.ffdTimelineList)
+			{
+				addFFDTimelineState(ffdTimeline.skinName, ffdTimeline.slotName, ffdTimeline.name);
 			}
 		}
 		
@@ -361,6 +395,37 @@
 			var index:int = _slotTimelineStateList.indexOf(timelineState);
 			_slotTimelineStateList.splice(index, 1);
 			SlotTimelineState.returnObject(timelineState);
+		}
+		
+		private function addFFDTimelineState(skinName:String, slotName:String, timelineName:String):void
+		{
+			//TODO:换肤
+			var slot:Slot = _armature.getSlot(slotName);
+			if(slot && slot.displayList.length > 0)
+			{
+				for each(var eachState:FFDTimelineState in _ffdTimelineStateList)
+				{
+					if(eachState.name == timelineName)
+					{
+						return;
+					}
+				}
+				
+				var meshData:MeshData = slot.getMeshData(timelineName);
+				if (meshData)
+				{
+					var timelineState:FFDTimelineState = FFDTimelineState.borrowObject();
+					timelineState.fadeIn(meshData, this, _clip.getFFDTimeline(timelineName));
+					_ffdTimelineStateList.push(timelineState);
+				}
+			}
+		}
+		
+		private function removeFFDTimelineState(timelineState:FFDTimelineState):void
+		{
+			var index:int = _ffdTimelineStateList.indexOf(timelineState);
+			_ffdTimelineStateList.splice(index, 1);
+			FFDTimelineState.returnObject(timelineState);
 		}
 		
 	//动画
@@ -684,6 +749,12 @@
 			{
 				slotTimeline.update(progress);
 				_isComplete = slotTimeline._isComplete && _isComplete;
+			}
+			//update ffdTimeline
+			for each(var ffdTimeline:FFDTimelineState in _ffdTimelineStateList)
+			{
+				ffdTimeline.update(progress);
+				_isComplete = ffdTimeline._isComplete && _isComplete;
 			}
 			//update main timeline
 			if(_currentTime != currentTime)
