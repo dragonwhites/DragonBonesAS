@@ -599,5 +599,30 @@
 			}
 			return null;
 		}
+		
+		public function getSkinnedMeshData():Vector.<MeshData>
+		{
+			var meshList:Vector.<MeshData> = new Vector.<MeshData>();
+			for (var i:int = 0, len:int = _displayDataList.length; i < len; i++)
+			{
+				if (_displayDataList[i] is MeshData && (_displayDataList[i] as MeshData).skinned)
+				{
+					meshList.push(_displayDataList[i]);
+				}
+			}
+			return meshList;
+		}
+		
+		public function getCurSkinnedMeshData():MeshData
+		{
+			var displayData:DisplayData = _displayDataList[_currentDisplayIndex];
+			if (_isShowDisplay && 
+				displayData is MeshData && 
+				(displayData as MeshData).skinned)
+			{
+				return displayData as MeshData;
+			}
+			return null;
+		}
 	}
 }

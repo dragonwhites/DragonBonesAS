@@ -9,6 +9,8 @@
 	import dragonBones.display.mesh.MeshArmature;
 	import dragonBones.display.mesh.MeshImage;
 	import dragonBones.display.mesh.MeshQuadImage;
+	import dragonBones.objects.ArmatureData;
+	import dragonBones.objects.DragonBonesData;
 	import dragonBones.objects.MeshData;
 	import flash.display.BitmapData;
 	import flash.display.MovieClip;
@@ -198,6 +200,28 @@
 		private function getNearest2N(_n:uint):uint
 		{
 			return _n & _n - 1?1 << _n.toString(2).length:_n;
+		}
+		
+		override protected function buildArmatureUsingArmatureDataFromTextureAtlas(dragonBonesData:DragonBonesData, armatureData:ArmatureData, textureAtlasName:String, skinName:String = null):Armature
+		{
+			var outputArmature:Armature = super.buildArmatureUsingArmatureDataFromTextureAtlas(dragonBonesData, armatureData, textureAtlasName, skinName);
+			
+			//计算mesh相对于其控制骨骼的相对matrix；此时是骨架状态
+			var slots:Vector.<Slot> = outputArmature.getSlots(false);
+			var meshes:Vector.<MeshData>;
+			
+			for (var i:int = 0, len:int = slots.length; i < len; i++)
+			{
+				meshes = slots[i].getSkinnedMeshData();
+				if (meshes && meshes.length > 0)
+				{
+					for (var j:int = 0, jLen:int = meshes.length; j < jLen; j++)
+					{
+						meshes[j].rig(outputArmature, slots[i]);
+					}
+				}
+			}
+			return outputArmature;
 		}
 	}
 }

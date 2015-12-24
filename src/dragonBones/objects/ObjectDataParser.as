@@ -261,7 +261,7 @@
 			meshData.triangles = triangles;
 			meshData.uvs = uvs;
 			meshData.edges = edges;
-			
+			meshData.bones = meshObject[ConstValues.BONE];
 			if(tempDragonBonesData!=null)
 			{
 				tempDragonBonesData.addDisplayData(meshData);

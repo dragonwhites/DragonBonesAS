@@ -214,7 +214,6 @@ package dragonBones.animation
 					currentTime -= int(currentTime / _totalTime) * _totalTime;
 				}
 			}
-			
 			if(_currentTime != currentTime)
 			{
 				_currentTime = currentTime;
@@ -279,6 +278,10 @@ package dragonBones.animation
 				{
 					_mesh.updated = false;
 				}
+			}
+			else
+			{
+				updateTween();
 			}
 		}
 		
@@ -384,7 +387,7 @@ package dragonBones.animation
 		}
 		
 		private function updateTween():void
-		{			
+		{	
 			var currentFrame:FFDFrame = _timelineData.frameList[_currentFrameIndex] as FFDFrame;
 			
 			if(_tweenVertices && _animationState.displayControl)

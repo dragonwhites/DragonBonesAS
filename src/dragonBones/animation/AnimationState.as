@@ -750,6 +750,17 @@
 				slotTimeline.update(progress);
 				_isComplete = slotTimeline._isComplete && _isComplete;
 			}
+			//update rigMesh
+			var slots:Vector.<Slot> = _armature.getSlots(false);
+			var meshData:MeshData;
+			for (var i:int = 0, len:int = slots.length; i < len; i++)
+			{
+				meshData = slots[i].getCurSkinnedMeshData();
+				if (meshData)
+				{
+					meshData.updateSkinnedMesh();
+				}
+			}
 			//update ffdTimeline
 			for each(var ffdTimeline:FFDTimelineState in _ffdTimelineStateList)
 			{

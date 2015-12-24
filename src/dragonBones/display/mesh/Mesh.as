@@ -61,6 +61,10 @@ package dragonBones.display.mesh
 			return mTriangles.length / 3;
 		}
 		
+		public function get skinned():Boolean
+		{
+			return mMeshData.skinned;
+		}
 		protected function updateVertices():void
 		{
 			var dataLen:int = mVertices.length / 4;

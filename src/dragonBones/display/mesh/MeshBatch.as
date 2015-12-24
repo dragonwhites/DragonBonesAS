@@ -161,7 +161,15 @@ package dragonBones.display.mesh
 		
 		public function render(mesh:MeshImage, support:RenderSupport, parentAlpha:Number):void
         {
-			addMesh(mesh, parentAlpha, mesh.texture,smoothing,support.modelViewMatrix);
+			if (mesh.skinned)
+			{
+				addMesh(mesh, parentAlpha, mesh.texture,smoothing);
+			}
+			else
+			{
+				addMesh(mesh, parentAlpha, mesh.texture,smoothing,support.modelViewMatrix);
+			}
+			
 			mParentAlpha = parentAlpha;
 			mSupport = support;
 			if (!(mesh.parent is MeshArmature))
@@ -250,7 +258,11 @@ package dragonBones.display.mesh
                                 blendMode:String = null):void
 		{
 			if (modelViewMatrix == null)
-                modelViewMatrix = mesh.transformationMatrix;
+			{
+				//是skinned mesh 由rig的骨骼坐标控制和其slot的坐标没有关系了，
+				//但骨骼的坐标只是相对其根骨骼的坐标，所以这里要乘上，mesh父的matrix
+                modelViewMatrix = mesh.parent.transformationMatrix;
+			}
             
             var alpha:Number = parentAlpha * mesh.alpha;
             

@@ -2,6 +2,7 @@ package dragonBones.factories
 {
 	import dragonBones.Armature;
 	import dragonBones.Bone;
+	import dragonBones.core.dragonBones_internal;
 	import dragonBones.fast.FastArmature;
 	import dragonBones.fast.FastBone;
 	import dragonBones.fast.FastSlot;
