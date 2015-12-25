@@ -6,26 +6,34 @@
 	* @langversion 3.0
 	* @version 2.0
 	*/
-	import flash.display.BitmapData;
-	import flash.display.MovieClip;
-	import flash.geom.Rectangle;
-	
 	import dragonBones.Armature;
-	import dragonBones.Slot;
-	import dragonBones.core.dragonBones_internal;
+	import dragonBones.display.mesh.MeshArmature;
+	import dragonBones.display.mesh.MeshImage;
+	import dragonBones.display.mesh.MeshQuadImage;
 	import dragonBones.display.StarlingFastSlot;
 	import dragonBones.display.StarlingSlot;
 	import dragonBones.fast.FastArmature;
 	import dragonBones.fast.FastSlot;
+	import dragonBones.objects.ArmatureData;
+	import dragonBones.objects.DragonBonesData;
+	import dragonBones.objects.MeshData;
+	import dragonBones.Slot;
 	import dragonBones.textures.ITextureAtlas;
 	import dragonBones.textures.StarlingTextureAtlas;
 	
+	import flash.display.BitmapData;
+	import flash.display.MovieClip;
+	import flash.geom.Rectangle;
+	
 	import starling.core.Starling;
+	import starling.display.DisplayObject;
 	import starling.display.Image;
 	import starling.display.Sprite;
 	import starling.textures.SubTexture;
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
+	
+	
 
 	use namespace dragonBones_internal;
 	
@@ -51,6 +59,10 @@
 	 */
 	public class StarlingFactory extends BaseFactory
 	{
+		/**
+		 * whether to use mesh
+		 */
+		public var useMesh:Boolean;
 		/**
 		 * Whether to generate mapmaps (true) or not (false).
 		 */
@@ -121,14 +133,31 @@
 		/** @private */
 		override protected function generateArmature():Armature
 		{
-			var armature:Armature = new Armature(new Sprite());
+			var armature:Armature
+			if (useMesh)
+			{
+				armature = new Armature(new MeshArmature());
+			}
+			else
+			{
+				armature = new Armature(new Sprite());
+			}
+			
 			return armature;
 		}
 		
 		/** @private */
 		override protected function generateFastArmature():FastArmature
 		{
-			var armature:FastArmature = new FastArmature(new Sprite());
+			var armature:FastArmature;
+			if (useMesh)
+			{
+				armature = new FastArmature(new MeshArmature());
+			}
+			else
+			{
+				armature = new FastArmature(new Sprite());
+			}
 			return armature;
 		}
 		
@@ -152,11 +181,20 @@
 		
 		/** @private */
 		override protected function generateDisplay(textureAtlas:Object, fullName:String, pivotX:Number, pivotY:Number):Object
-		{
+		{			
 			var subTexture:SubTexture = (textureAtlas as TextureAtlas).getTexture(fullName) as SubTexture;
 			if (subTexture)
 			{
-				var image:Image = new Image(subTexture);
+				var image:DisplayObject;
+				if (useMesh)
+				{
+					image = new MeshQuadImage(subTexture);
+				}
+				else
+				{
+					image = new Image(subTexture);
+				}
+				
 				if (isNaN(pivotX) || isNaN(pivotY))
 				{
 					var subTextureFrame:Rectangle = (textureAtlas as TextureAtlas).getFrame(fullName);
@@ -183,6 +221,39 @@
 		private function getNearest2N(_n:uint):uint
 		{
 			return _n & _n - 1?1 << _n.toString(2).length:_n;
+		}
+		
+		override protected function generateMesh(textureAtlas:Object, fullName:String, meshData:MeshData):Object 
+		{
+			var subTexture:SubTexture = (textureAtlas as TextureAtlas).getTexture(fullName) as SubTexture;
+			if (subTexture)
+			{
+				var image:MeshImage = new MeshImage(subTexture,meshData);
+				return image;
+			}
+			return null;
+		}
+		
+		override protected function buildArmatureUsingArmatureDataFromTextureAtlas(dragonBonesData:DragonBonesData, armatureData:ArmatureData, textureAtlasName:String, skinName:String = null):Armature
+		{
+			var outputArmature:Armature = super.buildArmatureUsingArmatureDataFromTextureAtlas(dragonBonesData, armatureData, textureAtlasName, skinName);
+			
+			//计算mesh相对于其控制骨骼的相对matrix；此时是骨架状态
+			var slots:Vector.<Slot> = outputArmature.getSlots(false);
+			var meshes:Vector.<MeshData>;
+			
+			for (var i:int = 0, len:int = slots.length; i < len; i++)
+			{
+				meshes = slots[i].getSkinnedMeshData();
+				if (meshes && meshes.length > 0)
+				{
+					for (var j:int = 0, jLen:int = meshes.length; j < jLen; j++)
+					{
+						meshes[j].rig(outputArmature, slots[i]);
+					}
+				}
+			}
+			return outputArmature;
 		}
 	}
 }

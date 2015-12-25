@@ -410,7 +410,10 @@ package dragonBones.animation
 					curVertex = 0;
 					if (currentFrame.offset <= i && currentFrame.vertices.length + currentFrame.offset < i)
 					{
-						curVertex = currentFrame.vertices[i - currentFrame.offset];
+						if (i - currentFrame.offset < currentFrame.vertices.length)
+						{
+							curVertex = currentFrame.vertices[i - currentFrame.offset];
+						}
 					}
 					_updateVertices[i - _offset] = curVertex + _durationVertices[i - _offset] * progress;
 				}

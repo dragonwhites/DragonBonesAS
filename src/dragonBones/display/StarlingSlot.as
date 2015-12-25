@@ -1,16 +1,19 @@
 ﻿package dragonBones.display
 {
+	import dragonBones.Armature;
+	import dragonBones.core.dragonBones_internal;
+	import dragonBones.display.mesh.Mesh;
+	import dragonBones.Slot;
+	
 	import flash.display.BlendMode;
 	import flash.geom.Matrix;
-	
-	import dragonBones.Armature;
-	import dragonBones.Slot;
-	import dragonBones.core.dragonBones_internal;
 	
 	import starling.display.BlendMode;
 	import starling.display.DisplayObject;
 	import starling.display.DisplayObjectContainer;
 	import starling.display.Quad;
+	
+	
 	
 	use namespace dragonBones_internal;
 	
@@ -161,6 +164,10 @@
 				if (_starlingDisplay is Quad)
 				{
 					(_starlingDisplay as Quad).color = (uint(rMultiplier * 0xff) << 16) + (uint(gMultiplier * 0xff) << 8) + uint(bMultiplier * 0xff);
+				}
+				else if (_starlingDisplay is Mesh)
+				{
+					(_starlingDisplay as Mesh).color = (uint(rMultiplier * 0xff) << 16) + (uint(gMultiplier * 0xff) << 8) + uint(bMultiplier * 0xff);
 				}
 			}
 		}
