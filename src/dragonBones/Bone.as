@@ -13,6 +13,7 @@
 	import dragonBones.objects.BoneData;
 	import dragonBones.objects.DBTransform;
 	import dragonBones.objects.Frame;
+	import dragonBones.objects.IKData;
 	import dragonBones.utils.TransformUtil;
 	
 	use namespace dragonBones_internal;
@@ -27,8 +28,8 @@
 		public static function initWithBoneData(boneData:BoneData):Bone
 		{
 			var outputBone:Bone = new Bone();
-			
 			outputBone.name = boneData.name;
+			outputBone.length = boneData.length;
 			outputBone.inheritRotation = boneData.inheritRotation;
 			outputBone.inheritScale = boneData.inheritScale;
 			outputBone.origin.copy(boneData.transform);
@@ -47,6 +48,10 @@
 		 * Sometimes, we want slots controlled by a spedific animation state when animation is doing mix or addition.
 		 */
 		public var displayController:String;
+		
+		public var rotationIK:Number;
+		public var length:Number;
+		public var ikDvalue:Number=0;
 		
 		/** @private */
 		protected var _boneList:Vector.<Bone>;
@@ -343,7 +348,36 @@
 			_global.x = this._origin.x + _tween.x + this._offset.x;
 			_global.y = this._origin.y + _tween.y + this._offset.y;
 		}
-		
+		override protected function updateGlobal():Object
+		{
+			calculateRelativeParentTransform();//计算自身的，加上时间轴的。
+			var output:Object = calculateParentTransform();//得到来自父亲的。
+			if(output != null)
+			{
+				//计算父骨头绝对坐标
+				var parentMatrix:Matrix = output.parentGlobalTransformMatrix;
+				var parentGlobalTransform:DBTransform = output.parentGlobalTransform;
+				//计算绝对坐标
+				var x:Number = _global.x; 
+				var y:Number = _global.y;
+				
+				_global.x = parentMatrix.a * x + parentMatrix.c * y + parentMatrix.tx;
+				_global.y = parentMatrix.d * y + parentMatrix.b * x + parentMatrix.ty;
+				
+				if(this.inheritRotation)
+				{
+					_global.skewX += parentGlobalTransform.skewX;
+					_global.skewY += parentGlobalTransform.skewY;
+					//继承父亲的？？
+				}
+				if(this.inheritScale)
+				{
+					_global.scaleX *= parentGlobalTransform.scaleX;
+					_global.scaleY *= parentGlobalTransform.scaleY;
+				}
+			}
+			return output;
+		}
 		/** @private */
 		dragonBones_internal function update(needUpdate:Boolean = false):void
 		{
@@ -356,15 +390,15 @@
 			{
 				return;
 			}
-			
 			blendingTimeline();
+			//计算时间轴上的属性，得到的是TweenTranstrame,对于受IK约束的，这个可以忽略
 			
 		//计算global
 			var result:Object = updateGlobal();
 			var parentGlobalTransform:DBTransform = result ? result.parentGlobalTransform : null;
 			var parentGlobalTransformMatrix:Matrix = result ? result.parentGlobalTransformMatrix : null;
 			
-		//计算globalForChild
+		//计算globalForChild 给孩子的，重新计算
 			var ifExistOffsetTranslation:Boolean = _offset.x != 0 || _offset.y != 0;
 			var ifExistOffsetScale:Boolean = _offset.scaleX != 1 || _offset.scaleY != 1;
 			var ifExistOffsetRotation:Boolean = _offset.skewX != 0 || _offset.skewY != 0;
@@ -413,13 +447,27 @@
 					_globalTransformForChild.skewY += this._offset.skewY;
 				}
 				
-				TransformUtil.transformToMatrix(_globalTransformForChild, _globalTransformMatrixForChild);
-				if(parentGlobalTransformMatrix)
+				//TransformUtil.transformToMatrix(_globalTransformForChild, _globalTransformMatrixForChild);
+				/*if(parentGlobalTransformMatrix)
 				{
 					_globalTransformMatrixForChild.concat(parentGlobalTransformMatrix);
 					TransformUtil.matrixToTransform(_globalTransformMatrixForChild, _globalTransformForChild, _globalTransformForChild.scaleX * parentGlobalTransform.scaleX >= 0, _globalTransformForChild.scaleY * parentGlobalTransform.scaleY >= 0 );
+				}*/
+			}
+		}
+		public function setMatrix():void
+		{
+			if(rotationIK == global.rotation){
+				var bone:Bone = this;
+				while(bone.parent){
+					rotationIK += bone.parent.ikDvalue;
+					bone = bone.parent;
 				}
 			}
+			global.skewX = global.skewY = rotationIK;
+			TransformUtil.transformToMatrix(global, _globalTransformMatrix);
+			_globalTransformForChild.skewX = _globalTransformForChild.skewY = rotationIK;
+			TransformUtil.transformToMatrix(_globalTransformForChild, _globalTransformMatrixForChild);
 		}
 		
 		/** @private */
@@ -656,6 +704,10 @@
 			}
 		}
 		
+		public function setRotationIK():void
+		{
+			this.rotationIK =global.rotation;
+		}
 		
 		public function get slot():Slot
 		{

@@ -115,6 +115,11 @@
 				outputArmatureData.addBoneData(parseBoneData(boneObject));
 			}
 			
+			for each(var ikObject:Object in armatureDataToParse[ConstValues.IK])
+			{
+				outputArmatureData.addIKData(parseIKData(ikObject));
+			}
+			
 			for each(var slotObject:Object in armatureDataToParse[ConstValues.SLOT])
 			{
 				outputArmatureData.addSlotData(parseSlotData(slotObject));

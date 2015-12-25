@@ -15,9 +15,10 @@
 	import dragonBones.objects.ArmatureData;
 	import dragonBones.objects.DragonBonesData;
 	import dragonBones.objects.Frame;
+	import dragonBones.objects.IKData;
 	import dragonBones.objects.SkinData;
 	import dragonBones.objects.SlotData;
-
+	
 	use namespace dragonBones_internal;
 
 	/**
@@ -102,6 +103,10 @@
 		
 		/** @private Store bones based on bones' hierarchy (From root to leaf)*/
 		protected var _boneList:Vector.<Bone>;
+		/**计算IK约束**/
+		private var _boneIKList:Vector.<Vector.<Bone>> = new Vector.<Vector.<Bone>>();
+		
+		protected var _ikList:Vector.<IKConstraint>;
 		
 		private var _delayDispose:Boolean;
 		private var _lockDispose:Boolean;
@@ -160,6 +165,8 @@
 			_slotList.fixed = true;
 			_boneList = new Vector.<Bone>;
 			_boneList.fixed = true;
+			_ikList = new Vector.<IKConstraint>();
+			_ikList.fixed = true;
 			_eventList = new Vector.<Event>;
 			_skinLists = { };
 			_delayDispose = false;
@@ -192,17 +199,25 @@
 			{
 				_boneList[i].dispose();
 			}
+			i = _ikList.length;
+			while(i --)
+			{
+				_ikList[i].dispose();
+			}
 			
 			_slotList.fixed = false;
 			_slotList.length = 0;
 			_boneList.fixed = false;
 			_boneList.length = 0;
+			_ikList.fixed = false;
+			_ikList.length = 0;
 			_eventList.length = 0;
 			
 			_armatureData = null;
 			_animation = null;
 			_slotList = null;
 			_boneList = null;
+			_ikList = null;
 			_eventList = null;
 			
 			//_display = null;
@@ -245,11 +260,34 @@
 			
 			var isFading:Boolean = _animation._isFading;
 			var i:int = _boneList.length;
-			while(i --)
+			/*while(i --)
 			{
 				var bone:Bone = _boneList[i];
 				bone.update(isFading);
+			}*/
+			
+			//var j:int = _boneList.length;
+			var bone:Bone;
+			for each (bone in _boneIKList[0]){
+				bone.update(isFading);
+				bone.setRotationIK();
+				bone.setMatrix();
 			}
+			for (var ii:int = 0; ii < _boneIKList.length; ii++) 
+			{
+				if (ii+1 == _boneIKList.length) 
+					break;
+				for each (bone in _boneIKList[ii+1]){
+					bone.update(isFading);
+					bone.setRotationIK();
+				}
+				_ikList[ii].compute();
+				for each (bone in _boneIKList[ii+1]){
+					bone.setMatrix();
+				}
+			}
+			
+			//IK
 			
 			i = _slotList.length;
 			while(i --)
@@ -401,7 +439,10 @@
 			}
 			return slot;
 		}
-		
+		public function getIKs(returnCopy:Boolean = true):Vector.<IKConstraint>
+		{
+			return returnCopy?_ikList.concat():_ikList;
+		}
 		/**
 		 * Get all Bone instance associated with this armature.
 		 * @param if return Vector copy
@@ -565,7 +606,41 @@
 				_slotList.fixed = true;
 			}
 		}
-		
+		public function updataBoneCache():void
+		{
+			var ikConstraintsCount:int = _ikList.length;
+			var arrayCount:int = ikConstraintsCount + 1;
+			
+			_boneIKList = new Vector.<Vector.<Bone>>();
+			while (_boneIKList.length < arrayCount)
+			_boneIKList[_boneIKList.length] = new Vector.<Bone>();
+			
+			var nonIkBones:Vector.<Bone> = _boneIKList[0];
+			outer:
+			for each (var bone:Bone in _boneList) {
+				var current:Bone = bone;
+				do {
+					var ii:int = 0;
+					for each (var ikConstraint:IKConstraint in _ikList) {
+						var parent:Bone = ikConstraint.bones[0];
+						var child:Bone = ikConstraint.bones[int(ikConstraint.bones.length - 1)];
+						while (true) {
+							if (current == child) {
+								//_boneCache[ii].unshift(bone);
+								_boneIKList[int(ii + 1)].unshift(bone);
+								continue outer;
+							}
+							if (child == parent) 
+								break;
+							child = child.parent;
+						}
+						ii++;
+					}
+					current = current.parent;
+				} while (current != null);
+				nonIkBones.unshift(bone);
+			}
+		}
 		/**
 		 * Sort all slots based on zOrder
 		 */
@@ -679,7 +754,12 @@
 				_skinLists[skinName] = list;
 			}
 		}
-		
+		public function buildIK():void
+		{
+			_ikList = new Vector.<IKConstraint>()
+			for each (var ikConstraintData:IKData in _armatureData.ikDataList)
+			_ikList[_ikList.length] = new IKConstraint(ikConstraintData, this);
+		}
 		public function changeSkin(skinName:String):void
 		{
 			var skinData:SkinData = armatureData.getSkinData(skinName);

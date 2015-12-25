@@ -13,6 +13,7 @@ package dragonBones.objects
 		public function ArmatureData()
 		{
 			_boneDataList = new Vector.<BoneData>(0, true);
+			_ikDataList = new Vector.<IKData>(0, true);
 			_skinDataList = new Vector.<SkinData>(0, true);
 			_slotDataList = new Vector.<SlotData>(0, true);
 			_animationDataList = new Vector.<AnimationData>(0, true);
