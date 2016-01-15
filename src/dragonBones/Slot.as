@@ -572,7 +572,7 @@
 			calculateRelativeParentTransform();
 			TransformUtil.transformToMatrix(_global, _globalTransformMatrix);
 			var output:Object = calculateParentTransform();
-			if(output != null)
+			if(output != null && output.parentGlobalTransformMatrix)
 			{
 				//计算父骨头绝对坐标
 				var parentMatrix:Matrix = output.parentGlobalTransformMatrix;

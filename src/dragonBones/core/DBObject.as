@@ -159,7 +159,7 @@ package dragonBones.core
 		{
 			if(this.parent && (this.inheritTranslation || this.inheritRotation || this.inheritScale))
 			{
-				var parentGlobalTransform:DBTransform = this._parent._globalTransformForChild;
+				var parentGlobalTransform:DBTransform = this._parent._globalTransformForChild? this._parent._globalTransformForChild:DBObject._tempParentGlobalTransform;
 				var parentGlobalTransformMatrix:Matrix = this._parent._globalTransformMatrixForChild;
 				
 				if(!this.inheritTranslation || !this.inheritRotation || !this.inheritScale)

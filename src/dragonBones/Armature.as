@@ -2,6 +2,7 @@
 {
 	import flash.events.Event;
 	import flash.events.EventDispatcher;
+	import flash.utils.Dictionary;
 	
 	import dragonBones.animation.Animation;
 	import dragonBones.animation.AnimationState;
@@ -260,29 +261,18 @@
 			
 			var isFading:Boolean = _animation._isFading;
 			var i:int = _boneList.length;
-			/*while(i --)
-			{
-				var bone:Bone = _boneList[i];
-				bone.update(isFading);
-			}*/
-			
-			//var j:int = _boneList.length;
 			var bone:Bone;
 			for each (bone in _boneIKList[0]){
 				bone.update(isFading);
 				bone.setRotationIK();
 				bone.setMatrix();
 			}
-			for (var ii:int = 0; ii < _boneIKList.length; ii++) 
+			for (var ii:int = 1; ii < _boneIKList.length; ii++) 
 			{
-				if (ii+1 == _boneIKList.length) 
-					break;
-				for each (bone in _boneIKList[ii+1]){
+				for each (bone in _boneIKList[ii]){
 					bone.update(isFading);
 					bone.setRotationIK();
-				}
-				_ikList[ii].compute();
-				for each (bone in _boneIKList[ii+1]){
+					_ikList[ii-1].compute();
 					bone.setMatrix();
 				}
 			}
@@ -608,37 +598,29 @@
 		}
 		public function updataBoneCache():void
 		{
+			var temp:Dictionary = new Dictionary();
 			var ikConstraintsCount:int = _ikList.length;
 			var arrayCount:int = ikConstraintsCount + 1;
 			
 			_boneIKList = new Vector.<Vector.<Bone>>();
 			while (_boneIKList.length < arrayCount)
 			_boneIKList[_boneIKList.length] = new Vector.<Bone>();
-			
-			var nonIkBones:Vector.<Bone> = _boneIKList[0];
-			outer:
-			for each (var bone:Bone in _boneList) {
+			temp[_boneList[_boneList.length-1].name] = 0;
+			for (var i:int = 0; i < _ikList.length; i++) 
+			{
+				temp[_ikList[i].bones[0].name] = i+1;
+			}
+			next:
+			for each(var bone:Bone in _boneList)
+			{
 				var current:Bone = bone;
-				do {
-					var ii:int = 0;
-					for each (var ikConstraint:IKConstraint in _ikList) {
-						var parent:Bone = ikConstraint.bones[0];
-						var child:Bone = ikConstraint.bones[int(ikConstraint.bones.length - 1)];
-						while (true) {
-							if (current == child) {
-								//_boneCache[ii].unshift(bone);
-								_boneIKList[int(ii + 1)].unshift(bone);
-								continue outer;
-							}
-							if (child == parent) 
-								break;
-							child = child.parent;
-						}
-						ii++;
+				while(current){
+					if(temp.hasOwnProperty(current.name)){
+						_boneIKList[temp[current.name]].push(bone);
+						continue next;
 					}
 					current = current.parent;
-				} while (current != null);
-				nonIkBones.unshift(bone);
+				}
 			}
 		}
 		/**

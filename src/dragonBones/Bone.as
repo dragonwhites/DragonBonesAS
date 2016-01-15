@@ -13,7 +13,6 @@
 	import dragonBones.objects.BoneData;
 	import dragonBones.objects.DBTransform;
 	import dragonBones.objects.Frame;
-	import dragonBones.objects.IKData;
 	import dragonBones.utils.TransformUtil;
 	
 	use namespace dragonBones_internal;
@@ -52,6 +51,7 @@
 		public var rotationIK:Number;
 		public var length:Number;
 		public var ikDvalue:Number=0;
+		public var isIKConstraint:Boolean = false;
 		
 		/** @private */
 		protected var _boneList:Vector.<Bone>;
@@ -352,7 +352,7 @@
 		{
 			calculateRelativeParentTransform();//计算自身的，加上时间轴的。
 			var output:Object = calculateParentTransform();//得到来自父亲的。
-			if(output != null)
+			if(output != null && output.parentGlobalTransformMatrix && output.parentGlobalTransform)
 			{
 				//计算父骨头绝对坐标
 				var parentMatrix:Matrix = output.parentGlobalTransformMatrix;
@@ -457,12 +457,10 @@
 		}
 		public function setMatrix():void
 		{
-			if(rotationIK == global.rotation){
-				var bone:Bone = this;
-				while(bone.parent){
-					rotationIK += bone.parent.ikDvalue;
-					bone = bone.parent;
-				}
+			var bone:Bone = this;
+			while(bone.isIKConstraint==false && bone.parent && bone.inheritRotation){
+				rotationIK += bone.parent.ikDvalue;
+				bone = bone.parent;
 			}
 			global.skewX = global.skewY = rotationIK;
 			TransformUtil.transformToMatrix(global, _globalTransformMatrix);

@@ -1,17 +1,19 @@
 package dragonBones.animation
 {
-	import dragonBones.objects.CurveData;
 	import flash.geom.Point;
 	
 	import dragonBones.Armature;
 	import dragonBones.Bone;
+	import dragonBones.IKConstraint;
 	import dragonBones.core.dragonBones_internal;
+	import dragonBones.objects.CurveData;
 	import dragonBones.objects.DBTransform;
 	import dragonBones.objects.Frame;
+	import dragonBones.objects.IKData;
 	import dragonBones.objects.TransformFrame;
 	import dragonBones.objects.TransformTimeline;
-	import dragonBones.utils.TransformUtil;
 	import dragonBones.utils.MathUtil;
+	import dragonBones.utils.TransformUtil;
 	
 	use namespace dragonBones_internal;
 	
@@ -467,8 +469,7 @@ package dragonBones.animation
 					_pivot.x = _originPivot.x + currentFrame.pivot.x;
 					_pivot.y = _originPivot.y + currentFrame.pivot.y;
 				}
-				
-				_bone.invalidUpdate();
+				setBoneInvalidUpadate(_bone);
 			}
 			else if(!_tweenScale)
 			{
@@ -534,8 +535,7 @@ package dragonBones.animation
 					_pivot.x = _originPivot.x + currentPivot.x + _durationPivot.x * progress;
 					_pivot.y = _originPivot.y + currentPivot.y + _durationPivot.y * progress;
 				}
-				
-				_bone.invalidUpdate();
+				setBoneInvalidUpadate(_bone);
 			}
 		}
 		
@@ -582,10 +582,21 @@ package dragonBones.animation
 				_pivot.x = _originPivot.x + currentFrame.pivot.x;
 				_pivot.y = _originPivot.y + currentFrame.pivot.y;
 			}
-			
-			_bone.invalidUpdate();
+			setBoneInvalidUpadate(_bone);
 		}
-		
+		private function setBoneInvalidUpadate(bone:Bone):void
+		{
+			bone.invalidUpdate();
+			for each (var ikConstraint:IKConstraint in _armature.getIKs()){
+				if(ikConstraint.target == bone)
+				{
+					for each (var bb:Bone in ikConstraint.bones) 
+					{
+						bb.invalidUpdate();
+					}
+				}
+			}
+		}
 		
 	}
 }

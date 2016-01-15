@@ -81,6 +81,7 @@
 				case "3.0":
 					return Object3DataParser.parseSkeletonData(rawDataToParse);
 					break;
+				case "4.0":
 				case DragonBones.DATA_VERSION:
 					break;
 				
@@ -164,6 +165,24 @@
 				boneData.global.copy(boneData.transform);
 			}
 			return boneData;
+		}
+		private static function parseIKData(ikObject:Object):IKData
+		{
+			var ikData:IKData = new IKData();
+			ikData.name = ikObject[ConstValues.A_NAME];
+			ikData.target = ikObject[ConstValues.A_TARGET];
+			if(ikObject.hasOwnProperty(ConstValues.A_WEIGHT)){
+				ikData.weight = Number(ikObject[ConstValues.A_WEIGHT]);
+			}else{
+				ikData.weight = 1;
+			}
+			ikData.bendPositive = getBoolean(ikObject, ConstValues.A_BENDPOSITIVE, true);
+			ikData.bones = new Vector.<String>();
+			for each (var boneName:String in  ikObject[ConstValues.A_BONES]) 
+			{
+				ikData.bones.push(boneName);
+			}
+			return ikData;
 		}
 		
 		private static function parseSkinData(skinObject:Object):SkinData

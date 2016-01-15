@@ -83,6 +83,7 @@
 				case "3.0":
 					return XML3DataParser.parseSkeletonData(rawData);
 					break;
+				case "4.0":
 				case DragonBones.DATA_VERSION:
 					break;
 				

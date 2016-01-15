@@ -88,7 +88,7 @@
 		
 		public static const A_TARGET:String = "target";
 		public static const A_WEIGHT:String = "weight";
-		public static const A_BONES:String = "bones";
+		public static const A_BONES:String = "bone";
 		public static const A_BENDPOSITIVE:String = "bendPositive";
 	}
 
