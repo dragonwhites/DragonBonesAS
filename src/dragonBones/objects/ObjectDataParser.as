@@ -82,6 +82,7 @@
 					return Object3DataParser.parseSkeletonData(rawDataToParse);
 					break;
 				case DragonBones.DATA_VERSION:
+				case DragonBones.DATA_VERSION_4_5:
 					break;
 				
 				default:
@@ -454,7 +455,7 @@
 			var frame:FFDFrame = new FFDFrame();
 			parseFrame(frameObject, frame, frameRate);
 			
-			//如果为NaN，则说明没有改变过zOrder
+			frame.tweenEasing = getNumber(frameObject, ConstValues.A_TWEEN_EASING, 10);
 			frame.offset = frameObject[ConstValues.A_OFFSET] || 0;
 			var arr:Array = frameObject[ConstValues.A_VERTICES];
 			var vertices:Vector.<Number> = new Vector.<Number>();

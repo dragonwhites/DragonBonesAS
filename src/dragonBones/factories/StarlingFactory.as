@@ -7,6 +7,7 @@
 	* @version 2.0
 	*/
 	import dragonBones.Armature;
+	import dragonBones.core.dragonBones_internal;
 	import dragonBones.display.mesh.MeshArmature;
 	import dragonBones.display.mesh.MeshImage;
 	import dragonBones.display.mesh.MeshQuadImage;

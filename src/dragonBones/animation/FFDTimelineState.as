@@ -315,7 +315,7 @@ package dragonBones.animation
 				_tweenEasing = _animationState.clip.tweenEasing;
 				if(isNaN(_tweenEasing))
 				{
-					_tweenEasing = NaN;
+					_tweenEasing = currentFrame.tweenEasing;
 					_tweenCurve = currentFrame.curve;
 					if(isNaN(_tweenEasing) && _tweenCurve == null)    //frame no tween
 					{
@@ -374,6 +374,7 @@ package dragonBones.animation
 						nextVertex = nextFrame.vertices[i - nextFrame.offset];
 					}
 					_durationVertices[i - _offset] = nextVertex - curVertex;
+					
 					if (_durationVertices[i - _offset] != 0)
 					{
 						_tweenVertices = true;
@@ -408,14 +409,12 @@ package dragonBones.animation
 				for (var i:int = _offset; i < end; i++)
 				{
 					curVertex = 0;
-					if (currentFrame.offset <= i && currentFrame.vertices.length + currentFrame.offset < i)
+					if (currentFrame.offset <= i && currentFrame.vertices.length + currentFrame.offset > i)
 					{
-						if (i - currentFrame.offset < currentFrame.vertices.length)
-						{
-							curVertex = currentFrame.vertices[i - currentFrame.offset];
-						}
+						curVertex = currentFrame.vertices[i - currentFrame.offset];
 					}
 					_updateVertices[i - _offset] = curVertex + _durationVertices[i - _offset] * progress;
+					
 				}
 				_mesh.updateVertices(_offset, _updateVertices);
 			}
