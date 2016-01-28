@@ -389,6 +389,16 @@
 			frame.action = frameXML.@[ConstValues.A_ACTION];
 			frame.event = frameXML.@[ConstValues.A_EVENT];
 			frame.sound = frameXML.@[ConstValues.A_SOUND];
+			
+			var curveList:XMLList = frameXML[ConstValues.A_CURVE];			
+			if(curveList.length()==4)
+			{				
+				frame.curve = new CurveData();
+				frame.curve.pointList = [	new Point(curveList[0],
+													  curveList[1]),
+											new Point(curveList[2],
+													  curveList[3])];
+			}
 		}
 		
 		private static function parseTransform(transformXML:XML, transform:DBTransform, pivot:Point = null):void
